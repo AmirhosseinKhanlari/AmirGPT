@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# Frontend
+web/frontend/node_modules/
+web/frontend/dist/
+*.tsbuildinfo
+
+# Large or regenerated artifacts
+checkpoints/
+*.pt
+edu_fineweb10B/
+sft_data/
+hellaswag/
+log*/
+logs_from_cluster/
+*.npy
+
+# Video transcript (copyrighted; not redistributed)
+transcript/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+.env
