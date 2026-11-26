@@ -143,6 +143,7 @@ from 2.456 to 1.351.
 | Data download + tokenization | 24 CPUs | 22 min | – |
 | Pretraining (19,073 steps) | 8× V100 | 6 h 24 min | 51.2 |
 | Chat fine-tuning (2 epochs) | 8× V100 | 35 min 40 s | 4.8 |
+| Preference tuning (DPO, experimental) | 8× V100 | 5 min 43 s | 0.8 |
 | Final fp32 evaluation | 1× V100 | 9 min 55 s | 0.2 |
 | Scaling benchmark | 8× V100 | 9 min 41 s | 1.3 |
 

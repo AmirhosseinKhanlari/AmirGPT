@@ -1,0 +1,38 @@
+{
+  "init": "log_sft/amirgpt_best.pt",
+  "max_lr": 1e-06,
+  "beta": 0.1,
+  "steps": 806,
+  "train_pairs": 51635,
+  "test_pairs": 1660,
+  "quality_start": {
+    "rep4": 0.06470278800631246,
+    "rep4_mean_per_reply": 0.05365711681571327,
+    "mean_tokens": 192.68,
+    "mean_words": 155.08,
+    "no_end_frac": 0.5,
+    "n": 50
+  },
+  "sft_val_start": 1.3507798156798234,
+  "quality_end": {
+    "rep4": 0.07725123947884238,
+    "rep4_mean_per_reply": 0.07473522093264105,
+    "mean_tokens": 224.02,
+    "mean_words": 176.46,
+    "no_end_frac": 0.72,
+    "n": 50
+  },
+  "test_final": {
+    "value": 0.6018330015331865,
+    "reward_acc": 0.6873493975903614,
+    "reward_margin": 0.31411261007369284,
+    "chosen_reward": -0.03262032916746944,
+    "rejected_reward": -0.34673293974834035,
+    "chosen_logp": -582.2279193188771,
+    "pairs": 1660
+  },
+  "best_reward_acc": 0.6879518072289157,
+  "best_step": 600,
+  "sft_val_end": 1.355307772198023,
+  "minutes": 5.234936165809631
+}

@@ -13,7 +13,8 @@ There are two checkpoints:
 
 * Architecture: GPT-2 small. 12 layers, 12 heads, 768-dim embeddings, 1,024-token context,
   GELU (tanh), pre-LayerNorm, token embedding tied to the output layer. 124,439,808 parameters
-  (the embedding table is padded from 50,257 to 50,304 rows for speed, as in the video).
+  at GPT-2's 50,257-token vocabulary, the same as OpenAI's. The checkpoints pad the embedding table
+  to 50,304 rows for speed, as in the video, which makes 124,475,904.
 * Tokenizer: OpenAI GPT-2 BPE (`tiktoken` "gpt2"). The chat model uses four extra tokens in the
   padded rows: `<|user|>` 50257, `<|assistant|>` 50258, `<|system|>` 50259, `<|end|>` 50260.
 * Code: `gpt2/model.py`. Checkpoints load with `gpt2.model.load_checkpoint(path)`.
@@ -34,6 +35,11 @@ filtering, truncated to 1,024 tokens. The loss counts assistant tokens only. Lea
 cosine decay. 8× V100, 35 min.
 
 Compute: about 51 V100-hours for pretraining and about 5 V100-hours for chat fine-tuning.
+
+**Preference tuning (experimental, not the default).** `amirgpt_chat_dpo.pt` is AmirGPT Chat after one
+epoch of DPO (β = 0.1, learning rate 1e-6) on 51,635 UltraFeedback preference pairs, 5 min on 8× V100.
+It prefers the better answer on 68.7% of 1,660 held-out pairs, but its replies are longer and slightly
+more repetitive, so it is not the default chat model (see the README).
 
 ## Evaluation
 

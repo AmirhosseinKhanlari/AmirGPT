@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Alt, GenParams, ModelInfo, Tok } from "./api";
-import { DEFAULT_PARAMS, fetchModels, streamGenerate } from "./api";
+import { DEFAULT_PARAMS, fetchModels } from "./api";
+import { describeStatus, generate, setEngine, useEngine } from "./engine";
+import { Compare } from "./Compare";
+import { allToJSON, conversationToJSON, conversationToMarkdown, download, fileStem, parseImport } from "./exportImport";
 import { Lab } from "./Lab";
 import { Message } from "./Message";
+import { isMobileNow, readPref, useIsMobile, writePref } from "./prefs";
 import type { ChatNode, Conversation, NodeId } from "./tree";
 import {
   activePath, addChild, historyUpTo, loadConversations, makeNode, newConversation, nodeText,
@@ -14,13 +18,6 @@ const SUGGESTIONS: Record<"chat" | "complete", string[]> = {
   complete: ["Hello, I'm a language model,", "The most important discovery in physics was", "Once upon a time, in a small village,", "In this lesson, we will learn how"],
 };
 
-function readPref<T>(k: string, d: T): T {
-  try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : d; } catch { return d; }
-}
-function writePref(k: string, v: unknown) {
-  try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* ignore */ }
-}
-
 export default function App() {
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [modelErr, setModelErr] = useState<string | null>(null);
@@ -28,12 +25,19 @@ export default function App() {
   const [currentId, setCurrentId] = useState<string | null>(() => readPref<string | null>("amirgpt.current", null));
   const [params, setParams] = useState<GenParams>(() => ({ ...DEFAULT_PARAMS, ...readPref("amirgpt.params", {}) }));
   const [lens, setLens] = useState<boolean>(() => readPref("amirgpt.lens", true));
-  const [tab, setTab] = useState<"chat" | "lab">("chat");
-  const [panel, setPanel] = useState<boolean>(() => readPref("amirgpt.panel", window.innerWidth > 1100));
-  const [sidebar, setSidebar] = useState<boolean>(window.innerWidth > 800);
+  const [markdown, setMarkdown] = useState<boolean>(() => readPref("amirgpt.markdown", true));
+  const [tab, setTab] = useState<"chat" | "compare" | "lab">("chat");
+  const isMobile = useIsMobile();
+  // on phones the panel is a bottom sheet and the sidebar a drawer: both start closed
+  const [panel, setPanel] = useState<boolean>(() => !isMobileNow() && readPref("amirgpt.panel", window.innerWidth > 1100));
+  const [sidebar, setSidebar] = useState<boolean>(() => !isMobileNow());
+  const [menuFor, setMenuFor] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{ text: string; error?: boolean } | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [theme, setTheme] = useState<string>(() => readPref("amirgpt.theme", ""));
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
+  const engine = useEngine();
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const stickRef = useRef(true);
@@ -47,7 +51,32 @@ export default function App() {
   useEffect(() => writePref("amirgpt.current", currentId), [currentId]);
   useEffect(() => writePref("amirgpt.params", params), [params]);
   useEffect(() => writePref("amirgpt.lens", lens), [lens]);
-  useEffect(() => writePref("amirgpt.panel", panel), [panel]);
+  useEffect(() => writePref("amirgpt.markdown", markdown), [markdown]);
+  useEffect(() => { if (!isMobileNow()) writePref("amirgpt.panel", panel); }, [panel]);
+  // crossing the breakpoint: drawers close on phones; the desktop layout comes back as it was
+  const firstLayout = useRef(true);
+  useEffect(() => {
+    if (firstLayout.current) { firstLayout.current = false; return; }
+    setSidebar(!isMobile);
+    setPanel(!isMobile && readPref("amirgpt.panel", window.innerWidth > 1100));
+  }, [isMobile]);
+  useEffect(() => {
+    if (!isMobile || !(sidebar || panel)) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setSidebar(false); setPanel(false); } };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [isMobile, sidebar, panel]);
+  useEffect(() => {
+    if (!menuFor) return;
+    const onDown = (e: PointerEvent) => { if (!(e.target as Element | null)?.closest(".conv-menu, .conv-more")) setMenuFor(null); };
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, [menuFor]);
+  useEffect(() => {
+    if (!notice) return;
+    const t = setTimeout(() => setNotice(null), notice.error ? 9000 : 4000);
+    return () => clearTimeout(t);
+  }, [notice]);
   useEffect(() => {
     writePref("amirgpt.theme", theme);
     if (theme) document.documentElement.setAttribute("data-theme", theme);
@@ -95,7 +124,7 @@ export default function App() {
       mutate(convId, (c) => updateNode(c, node.id, { tokens: [...c.nodes[node.id].tokens, ...add] }));
     };
     try {
-      const done = await streamGenerate({
+      const done = await generate({
         model: c0.model,
         ...(info?.mode === "complete"
           ? { prompt: history.filter((m) => m.role === "user").map((m) => m.content).at(-1) ?? "" }
@@ -171,7 +200,7 @@ export default function App() {
     setConvs((l) => [c, ...l.filter((x) => Object.keys(x.nodes).length > 0)]);
     setCurrentId(c.id);
     setTab("chat");
-    if (window.innerWidth <= 800) setSidebar(false);
+    if (isMobile) setSidebar(false);
   };
   const deleteChat = (id: string) => {
     setConvs((l) => l.filter((c) => c.id !== id));
@@ -183,12 +212,36 @@ export default function App() {
     else newChat(id);
   };
 
+  // ------------------------------------------------------------------ export / import
+  const exportMarkdown = (c: Conversation) =>
+    download(fileStem(c.title) + ".md", conversationToMarkdown(c, models.find((m) => m.id === c.model)), "text/markdown;charset=utf-8");
+  const exportJSON = (c: Conversation) => download(fileStem(c.title) + ".json", conversationToJSON(c), "application/json");
+  const exportAll = () => {
+    const list = convs.filter((c) => Object.keys(c.nodes).length > 0);
+    if (!list.length) return setNotice({ text: "No conversations to export yet.", error: true });
+    download(fileStem("conversations") + ".json", allToJSON(list), "application/json");
+  };
+  const importFile = async (f: File) => {
+    try {
+      const list = parseImport(await f.text());
+      setConvs((l) => [...list, ...l]);
+      convsRef.current = [...list, ...convsRef.current];
+      setCurrentId(list[0].id);
+      setTab("chat");
+      setNotice({ text: list.length === 1 ? `Imported “${list[0].title}”.` : `Imported ${list.length} conversations.` });
+    } catch (e) {
+      setNotice({ text: (e as Error).message, error: true });
+    }
+  };
+
   const setP = <K extends keyof GenParams>(k: K, v: GenParams[K]) => setParams((p) => ({ ...p, [k]: v }));
   const activeModelId = conv?.model ?? defaultModel;
 
   // ------------------------------------------------------------------ render
+  const panelOpen = panel && tab !== "lab";
+  const closeDrawers = () => { setSidebar(false); setPanel(false); };
   return (
-    <div className={"app" + (sidebar ? " with-sidebar" : "") + (panel && tab === "chat" ? " with-panel" : "")}>
+    <div className={"app" + (sidebar ? " with-sidebar" : "") + (panelOpen ? " with-panel" : "")}>
       <aside className="sidebar" aria-label="Conversations">
         <div className="brand">
           <span className="logo" aria-hidden>
@@ -196,6 +249,7 @@ export default function App() {
               <path d="M16 3 L28 26 H4 Z" fill="none" stroke="url(#g)" strokeWidth="2.6" strokeLinejoin="round" /><circle cx="16" cy="19" r="3.2" fill="url(#g)" /></svg>
           </span>
           <span className="brand-name">Amir<b>GPT</b></span>
+          {isMobile && <button className="icon-btn drawer-close" onClick={() => setSidebar(false)} aria-label="close menu">×</button>}
         </div>
         <button className="btn primary block" onClick={() => newChat()} disabled={busy}>+ New chat</button>
         <div className="model-list" role="radiogroup" aria-label="Model">
@@ -211,27 +265,46 @@ export default function App() {
         </div>
         <div className="conv-list">
           {convs.filter((c) => Object.keys(c.nodes).length > 0).map((c) => (
-            <div key={c.id} className={"conv-item" + (c.id === currentId ? " active" : "")}>
-              <button className="conv-title" onClick={() => { setCurrentId(c.id); setTab("chat"); if (window.innerWidth <= 800) setSidebar(false); }}>
+            <div key={c.id} className={"conv-item" + (c.id === currentId ? " active" : "") + (menuFor === c.id ? " menu-open" : "")}>
+              <button className="conv-title" onClick={() => { setCurrentId(c.id); setTab("chat"); if (isMobile) setSidebar(false); }}>
                 {c.title}
               </button>
-              <button className="conv-del" aria-label="delete conversation" onClick={() => deleteChat(c.id)}>×</button>
+              <button className="conv-more" aria-label={`actions for ${c.title}`} aria-haspopup="menu" aria-expanded={menuFor === c.id}
+                      onClick={() => setMenuFor((m) => (m === c.id ? null : c.id))}>⋯</button>
+              {menuFor === c.id && (
+                <div className="conv-menu" role="menu">
+                  <button role="menuitem" onClick={() => { setMenuFor(null); exportMarkdown(c); }}>Export as Markdown <em>visible branch</em></button>
+                  <button role="menuitem" onClick={() => { setMenuFor(null); exportJSON(c); }}>Export as JSON <em>whole tree</em></button>
+                  <button role="menuitem" className="danger" onClick={() => { setMenuFor(null); deleteChat(c.id); }}>Delete</button>
+                </div>
+              )}
             </div>
           ))}
         </div>
+        <div className="sidebar-actions">
+          <button className="btn ghost" onClick={() => fileRef.current?.click()} title="Import a conversation exported as JSON">Import JSON</button>
+          <button className="btn ghost" onClick={exportAll} title="Download every conversation as one JSON file">Export all</button>
+          <input ref={fileRef} type="file" accept=".json,application/json" hidden
+                 onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void importFile(f); }} />
+        </div>
+        {notice && <div className={"notice small" + (notice.error ? " error" : "")} role="status">{notice.text}</div>}
         <div className="sidebar-foot muted small">GPT-2 124M · built from scratch</div>
       </aside>
 
+      {isMobile && (sidebar || panelOpen) && <div className="scrim" onClick={closeDrawers} aria-hidden />}
+
       <main className="main">
         <header className="topbar">
-          <button className="icon-btn" onClick={() => setSidebar((s) => !s)} aria-label="toggle sidebar">☰</button>
+          <button className="icon-btn" onClick={() => { setSidebar((s) => !s); if (isMobile) setPanel(false); }}
+                  aria-label={sidebar ? "close menu" : "open menu"} aria-expanded={sidebar}>☰</button>
           <nav className="tabs" role="tablist">
             <button role="tab" aria-selected={tab === "chat"} className={tab === "chat" ? "active" : ""} onClick={() => setTab("chat")}>Chat</button>
+            <button role="tab" aria-selected={tab === "compare"} className={tab === "compare" ? "active" : ""} onClick={() => setTab("compare")}>Compare</button>
             <button role="tab" aria-selected={tab === "lab"} className={tab === "lab" ? "active" : ""} onClick={() => setTab("lab")}>Lab</button>
           </nav>
           <div className="topbar-right">
-            {tab === "chat" && (
-              <label className="toggle" title="Tint every token by how confident the model was, and show alternatives on hover">
+            {tab !== "lab" && (
+              <label className="toggle topbar-lens" title="Tint every token by how confident the model was, and show alternatives on hover">
                 <input type="checkbox" checked={lens} onChange={(e) => setLens(e.target.checked)} />
                 <span className="toggle-track"><span className="toggle-thumb" /></span>
                 Confidence lens
@@ -239,11 +312,15 @@ export default function App() {
             )}
             <button className="icon-btn" aria-label="toggle theme" title="theme"
                     onClick={() => setTheme((t) => (t === "" ? (matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "dark") : t === "dark" ? "light" : "dark"))}>◐</button>
-            {tab === "chat" && <button className="icon-btn" aria-label="toggle controls" onClick={() => setPanel((p) => !p)}>⚙</button>}
+            {tab !== "lab" && <button className="icon-btn" aria-label="toggle settings" aria-expanded={panelOpen}
+                                      onClick={() => { setPanel((p) => !p); if (isMobile) setSidebar(false); }}>⚙</button>}
           </div>
         </header>
 
-        {tab === "lab" ? <Lab /> : (
+        {tab === "lab" && <Lab />}
+        <Compare models={models} params={params} lens={lens} markdown={markdown} hidden={tab !== "compare"}
+                 onOpenSettings={() => { setPanel(true); if (isMobile) setSidebar(false); }} />
+        {tab === "chat" && (
           <>
             <div className="scroll" ref={scrollRef}
                  onScroll={(e) => { const el = e.currentTarget; stickRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80; }}>
@@ -255,7 +332,7 @@ export default function App() {
                     {mode === "complete" ? " Type the start of a text and it will continue it." : ""}
                   </p>
                   <p className="hint">With the <b>confidence lens</b> on, warm tokens are ones the model was unsure about.
-                    Hover over any token to see what else it considered, and click an alternative to <b>fork</b> the reply from there.</p>
+                    Hover over (or tap) any token to see what else it considered, and click an alternative to <b>fork</b> the reply from there.</p>
                   <div className="suggestions">
                     {SUGGESTIONS[mode].map((s) => (
                       <button key={s} className="suggestion" disabled={busy || !modelInfo?.available} onClick={() => send(s)}>{s}</button>
@@ -267,7 +344,7 @@ export default function App() {
                   {path.map((n) => {
                     const sibs = siblings(conv!, n);
                     return (
-                      <Message key={n.id} node={n} mode={mode} lens={lens} busy={busy}
+                      <Message key={n.id} node={n} mode={mode} lens={lens} markdown={markdown} busy={busy}
                                siblingIndex={sibs.indexOf(n.id)} siblingCount={sibs.length}
                                onSwitch={(d) => mutate(conv!.id, (c) => switchSibling(c, c.nodes[n.id], d))}
                                onFork={(i, alt) => fork(n, i, alt)} onRegenerate={() => regenerate(n)}
@@ -290,17 +367,47 @@ export default function App() {
                         rows={Math.min(8, Math.max(1, input.split("\n").length))} disabled={!modelInfo?.available}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(input); } }} />
-              {busy ? <button type="button" className="btn" onClick={stop}>Stop</button>
-                    : <button type="submit" className="btn primary" disabled={!input.trim() || !modelInfo?.available}>Send</button>}
+              {busy ? <button key="stop" type="button" className="btn" onClick={stop}>Stop</button>
+                    : <button key="send" type="submit" className="btn primary" disabled={!input.trim() || !modelInfo?.available}>Send</button>}
             </form>
             <div className="disclaimer muted small">AmirGPT is a 124M-parameter model and often makes things up. Don't rely on it for facts.</div>
           </>
         )}
       </main>
 
-      {tab === "chat" && (
-        <aside className="panel" aria-label="Generation controls">
-          <h3>Sampling</h3>
+      {tab !== "lab" && (
+        <aside className="panel" aria-label="Settings">
+          <div className="sheet-head">
+            <span className="sheet-grip" aria-hidden />
+            <b>Settings</b>
+            <button className="btn ghost" onClick={() => setPanel(false)}>Done</button>
+          </div>
+          <h3>Engine</h3>
+          <div className="seg" role="radiogroup" aria-label="Where the model runs">
+            <button role="radio" aria-checked={engine.kind === "server"} className={"seg-btn" + (engine.kind === "server" ? " on" : "")}
+                    onClick={() => setEngine("server")}>Server</button>
+            <button role="radio" aria-checked={engine.kind === "browser"} className={"seg-btn" + (engine.kind === "browser" ? " on" : "")}
+                    onClick={() => setEngine("browser")}>In your browser</button>
+          </div>
+          <p className={"engine-status" + (engine.phase === "error" ? " error" : "")} aria-live="polite">
+            {describeStatus(engine)}
+            {engine.kind === "browser" && engine.phase === "download" && !!engine.total && (
+              <progress max={engine.total} value={engine.loaded ?? 0} />
+            )}
+          </p>
+          {engine.kind === "browser" && <p className="muted small">Only the AmirGPT models run in the browser. OpenAI GPT-2 needs the Server engine.</p>}
+          <h3>Display</h3>
+          <label className="toggle field-toggle" title="Render headings, lists, bold, italic and code. Every character still belongs to its token.">
+            <input type="checkbox" checked={markdown} onChange={(e) => setMarkdown(e.target.checked)} />
+            <span className="toggle-track"><span className="toggle-thumb" /></span>
+            <span>Formatted replies <em className="muted">{markdown ? "(markdown)" : "(raw tokens)"}</em></span>
+          </label>
+          <label className="toggle field-toggle" title="Tint every token by how confident the model was, and show alternatives on hover">
+            <input type="checkbox" checked={lens} onChange={(e) => setLens(e.target.checked)} />
+            <span className="toggle-track"><span className="toggle-thumb" /></span>
+            <span>Confidence lens</span>
+          </label>
+          <h3>Sampling{tab === "compare" ? <em className="muted"> · used by every column</em> : null}</h3>
           <Slider label="Temperature" hint="0 = always the most likely token; higher = more random" min={0} max={2} step={0.05} value={params.temperature} onChange={(v) => setP("temperature", v)} />
           <Slider label="Top-k" hint="sample only from the k most likely tokens (0 = off)" min={0} max={200} step={1} value={params.top_k} onChange={(v) => setP("top_k", v)} />
           <Slider label="Top-p" hint="nucleus: smallest set of tokens with this total probability" min={0.05} max={1} step={0.01} value={params.top_p} onChange={(v) => setP("top_p", v)} />
@@ -309,12 +416,12 @@ export default function App() {
           <label className="field">
             <span>Seed <em className="muted">(fixed = reproducible)</em></span>
             <div className="row">
-              <input type="number" value={params.seed ?? ""} placeholder="random" onChange={(e) => setP("seed", e.target.value === "" ? null : Number(e.target.value))} />
+              <input type="number" inputMode="numeric" value={params.seed ?? ""} placeholder="random" onChange={(e) => setP("seed", e.target.value === "" ? null : Number(e.target.value))} />
               <button className="btn ghost" onClick={() => setP("seed", null)}>random</button>
             </div>
           </label>
           <button className="btn ghost block" onClick={() => setParams(DEFAULT_PARAMS)}>Reset to defaults</button>
-          {mode === "chat" && conv && (
+          {tab === "chat" && mode === "chat" && conv && (
             <label className="field">
               <span>System prompt <em className="muted">(this chat)</em></span>
               <textarea rows={3} value={conv.systemPrompt} placeholder="e.g. Answer in one short sentence."
@@ -325,7 +432,7 @@ export default function App() {
           <div className="legend-scale"><span>confident</span><i /><span>unsure</span></div>
           <p className="muted small">Each token's tint is 1 − p, where p is the probability the model gave to the token it produced.
             The line under each reply (the confidence river) plots p across the reply. Click it to inspect any token.</p>
-          {path.length > 0 && (() => {
+          {tab === "chat" && path.length > 0 && (() => {
             const last = [...path].reverse().find((n) => n.role === "assistant");
             return last ? <p className="muted small">Visible reply: {nodeText(last).length} characters, {last.tokens.length} tokens.</p> : null;
           })()}

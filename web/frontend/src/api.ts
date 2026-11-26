@@ -48,6 +48,16 @@ export type GenerateRequest = {
   params: GenParams;
 };
 
+/** A non-2xx reply from the backend; `message` is the server's detail (e.g. 409: model not available). */
+export class HttpError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "HttpError";
+    this.status = status;
+  }
+}
+
 export async function fetchModels(): Promise<ModelInfo[]> {
   const r = await fetch("/api/models");
   if (!r.ok) throw new Error(`models: HTTP ${r.status}`);
@@ -80,7 +90,7 @@ export async function streamGenerate(
     } catch {
       /* not json */
     }
-    throw new Error(msg);
+    throw new HttpError(r.status, msg);
   }
   const reader = r.body.getReader();
   const decoder = new TextDecoder();

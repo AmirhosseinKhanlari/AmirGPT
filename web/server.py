@@ -11,6 +11,7 @@ Endpoints:
   GET  /api/models    -> models + availability
   POST /api/generate  -> text/event-stream of {"type":"token",...} events, then {"type":"done",...}
   GET  /api/metrics   -> training curves (log/metrics.jsonl, log_sft/metrics.jsonl) + reference baselines
+  GET  /models/...    -> checkpoints/onnx/ (ONNX exports for the in-browser WebGPU engine; read-only)
   GET  /              -> built frontend (web/frontend/dist)
 
 Run:  python -m web.server   (or ./run.sh)
@@ -54,6 +55,11 @@ MODELS = {
     "openai-gpt2": {
         "name": "OpenAI GPT-2", "mode": "complete", "path": None,
         "description": "OpenAI's original GPT-2 124M weights loaded into our model code, for comparison.",
+    },
+    "amirgpt-chat-dpo": {
+        "name": "AmirGPT Chat + DPO", "mode": "chat", "path": CKPT_DIR / "amirgpt_chat_dpo.pt",
+        "description": "Experimental: AmirGPT Chat after preference tuning (DPO). It prefers the better answer more often, "
+                       "but its replies are longer and slightly more repetitive, so AmirGPT Chat stays the default.",
     },
 }
 
@@ -171,20 +177,27 @@ def generate(req: GenerateRequest):
             if t < enc.n_vocab:
                 decoder.decode(enc.decode_single_token_bytes(t))
         n, t0, reason = 0, time.time(), "length"
-        with _locks[req.model]:
-            idx = torch.tensor([ids], dtype=torch.long, device=DEVICE)
-            for tok in model.stream(idx, max_new_tokens=p.max_new_tokens, temperature=p.temperature,
-                                    top_k=p.top_k, top_p=p.top_p, repetition_penalty=p.repetition_penalty,
-                                    stop_tokens=stop, banned_tokens=banned, generator=gen):
-                if tok["stop"]:
-                    reason = "stop"
-                    break
-                n += 1
-                text = decoder.decode(enc.decode_single_token_bytes(tok["id"])) if tok["id"] < enc.n_vocab else ""
-                yield "data: " + json.dumps({
-                    "type": "token", "id": tok["id"], "text": text, "prob": tok["prob"],
-                    "alternatives": [{"id": i, "text": token_text(i), "prob": pr} for i, pr in tok["alternatives"]],
-                }) + "\n\n"
+        idx = torch.tensor([ids], dtype=torch.long, device=DEVICE)
+        steps = model.stream(idx, max_new_tokens=p.max_new_tokens, temperature=p.temperature,
+                             top_k=p.top_k, top_p=p.top_p, repetition_penalty=p.repetition_penalty,
+                             stop_tokens=stop, banned_tokens=banned, generator=gen)
+        while True:
+            # Hold the model lock for one decoding step only, never across a `yield`: on a client
+            # disconnect (Stop) Starlette abandons this generator without closing it, so a lock held
+            # across the yield would block this model until the garbage collector freed it.
+            with _locks[req.model]:
+                tok = next(steps, None)
+            if tok is None:
+                break
+            if tok["stop"]:
+                reason = "stop"
+                break
+            n += 1
+            text = decoder.decode(enc.decode_single_token_bytes(tok["id"])) if tok["id"] < enc.n_vocab else ""
+            yield "data: " + json.dumps({
+                "type": "token", "id": tok["id"], "text": text, "prob": tok["prob"],
+                "alternatives": [{"id": i, "text": token_text(i), "prob": pr} for i, pr in tok["alternatives"]],
+            }) + "\n\n"
         tail = decoder.decode(b"", final=True)
         dt = max(time.time() - t0, 1e-6)
         yield "data: " + json.dumps({"type": "done", "reason": reason, "tail": tail, "tokens": n,
@@ -227,6 +240,22 @@ def metrics():
                 "samples": [r for r in sft if r.get("kind") == "samples"][-3:]},
         "baselines": BASELINES,
     })
+
+
+# ONNX exports (web/export_onnx.py) for the in-browser engine (web/frontend/src/webgpu):
+# read-only static files, .onnx / .json only, confined to checkpoints/onnx/.
+ONNX_DIR = CKPT_DIR / "onnx"
+_MODEL_FILE_TYPES = {".onnx": "application/octet-stream", ".json": "application/json"}
+
+
+@app.get("/models/{path:path}")
+def model_file(path: str):
+    root = ONNX_DIR.resolve()
+    f = (root / path).resolve()
+    if root not in f.parents or f.suffix not in _MODEL_FILE_TYPES or not f.is_file():
+        raise HTTPException(404, "not found")
+    # no-cache = revalidate (ETag / Last-Modified -> 304); the engine itself keeps the model in Cache Storage
+    return FileResponse(f, media_type=_MODEL_FILE_TYPES[f.suffix], headers={"Cache-Control": "no-cache"})
 
 
 if DIST.exists():
