@@ -1,0 +1,877 @@
+{
+ "shards": 100,
+ "train_shards": 99,
+ "val_shards": 1,
+ "tokens_total": 9953989344,
+ "tokens_train": 9853989344,
+ "tokens_val": 100000000,
+ "documents": 9672101,
+ "doc_len_tokens_percentiles_from_sample": {
+  "10": 211.0,
+  "25": 349.0,
+  "50": 627.0,
+  "75": 1087.0,
+  "90": 1918.0,
+  "99": 7667.429999999993
+ },
+ "doc_len_tokens_mean": 1029.1444789503335,
+ "doc_len_max_within_shard": 168038,
+ "hist_edges": [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  10,
+  11,
+  13,
+  16,
+  19,
+  23,
+  27,
+  32,
+  38,
+  45,
+  54,
+  64,
+  76,
+  91,
+  108,
+  128,
+  152,
+  181,
+  215,
+  256,
+  304,
+  362,
+  431,
+  512,
+  609,
+  724,
+  861,
+  1024,
+  1218,
+  1448,
+  1722,
+  2048,
+  2435,
+  2896,
+  3444,
+  4096,
+  4871,
+  5793,
+  6889,
+  8192,
+  9742,
+  11585,
+  13777,
+  16384,
+  19484,
+  23170,
+  27554,
+  32768,
+  38968,
+  46341,
+  55109,
+  65536,
+  77936,
+  92682,
+  110218,
+  131072,
+  155872,
+  185364,
+  220436,
+  262144,
+  311744,
+  370728,
+  440872,
+  524288,
+  623487,
+  741455,
+  881744,
+  1048576
+ ],
+ "hist_counts": [
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  1,
+  0,
+  2,
+  0,
+  4,
+  53,
+  1139,
+  10058,
+  31390,
+  61309,
+  108813,
+  178197,
+  261294,
+  342822,
+  438214,
+  512656,
+  599942,
+  663788,
+  688909,
+  778369,
+  836498,
+  789292,
+  716432,
+  615335,
+  500895,
+  376896,
+  287008,
+  214156,
+  162473,
+  120853,
+  92396,
+  68840,
+  52543,
+  40947,
+  32086,
+  25191,
+  19755,
+  14277,
+  9866,
+  6740,
+  4545,
+  2849,
+  1850,
+  1235,
+  753,
+  497,
+  291,
+  210,
+  195,
+  122,
+  94,
+  16,
+  5,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0
+ ],
+ "per_shard": [
+  {
+   "shard": "edufineweb_train_000001.npy",
+   "tokens": 100000000,
+   "docs_starting": 97867,
+   "head_tokens": 2129,
+   "max_len": 156269
+  },
+  {
+   "shard": "edufineweb_train_000002.npy",
+   "tokens": 100000000,
+   "docs_starting": 97669,
+   "head_tokens": 18,
+   "max_len": 98585
+  },
+  {
+   "shard": "edufineweb_train_000003.npy",
+   "tokens": 100000000,
+   "docs_starting": 96192,
+   "head_tokens": 66,
+   "max_len": 112059
+  },
+  {
+   "shard": "edufineweb_train_000004.npy",
+   "tokens": 100000000,
+   "docs_starting": 95059,
+   "head_tokens": 204,
+   "max_len": 107873
+  },
+  {
+   "shard": "edufineweb_train_000005.npy",
+   "tokens": 100000000,
+   "docs_starting": 96931,
+   "head_tokens": 1145,
+   "max_len": 111566
+  },
+  {
+   "shard": "edufineweb_train_000006.npy",
+   "tokens": 100000000,
+   "docs_starting": 96190,
+   "head_tokens": 2406,
+   "max_len": 112727
+  },
+  {
+   "shard": "edufineweb_train_000007.npy",
+   "tokens": 100000000,
+   "docs_starting": 96758,
+   "head_tokens": 3090,
+   "max_len": 89420
+  },
+  {
+   "shard": "edufineweb_train_000008.npy",
+   "tokens": 100000000,
+   "docs_starting": 98059,
+   "head_tokens": 707,
+   "max_len": 128780
+  },
+  {
+   "shard": "edufineweb_train_000009.npy",
+   "tokens": 100000000,
+   "docs_starting": 97970,
+   "head_tokens": 2141,
+   "max_len": 134492
+  },
+  {
+   "shard": "edufineweb_train_000010.npy",
+   "tokens": 100000000,
+   "docs_starting": 98271,
+   "head_tokens": 193,
+   "max_len": 105994
+  },
+  {
+   "shard": "edufineweb_train_000011.npy",
+   "tokens": 100000000,
+   "docs_starting": 95518,
+   "head_tokens": 474,
+   "max_len": 129462
+  },
+  {
+   "shard": "edufineweb_train_000012.npy",
+   "tokens": 100000000,
+   "docs_starting": 96005,
+   "head_tokens": 3017,
+   "max_len": 128530
+  },
+  {
+   "shard": "edufineweb_train_000013.npy",
+   "tokens": 100000000,
+   "docs_starting": 97325,
+   "head_tokens": 4325,
+   "max_len": 125917
+  },
+  {
+   "shard": "edufineweb_train_000014.npy",
+   "tokens": 100000000,
+   "docs_starting": 96060,
+   "head_tokens": 7679,
+   "max_len": 144413
+  },
+  {
+   "shard": "edufineweb_train_000015.npy",
+   "tokens": 100000000,
+   "docs_starting": 96130,
+   "head_tokens": 5502,
+   "max_len": 135706
+  },
+  {
+   "shard": "edufineweb_train_000016.npy",
+   "tokens": 100000000,
+   "docs_starting": 97664,
+   "head_tokens": 92,
+   "max_len": 121690
+  },
+  {
+   "shard": "edufineweb_train_000017.npy",
+   "tokens": 100000000,
+   "docs_starting": 97136,
+   "head_tokens": 763,
+   "max_len": 137864
+  },
+  {
+   "shard": "edufineweb_train_000018.npy",
+   "tokens": 100000000,
+   "docs_starting": 97353,
+   "head_tokens": 301,
+   "max_len": 127201
+  },
+  {
+   "shard": "edufineweb_train_000019.npy",
+   "tokens": 100000000,
+   "docs_starting": 96696,
+   "head_tokens": 3646,
+   "max_len": 104848
+  },
+  {
+   "shard": "edufineweb_train_000020.npy",
+   "tokens": 100000000,
+   "docs_starting": 96901,
+   "head_tokens": 2088,
+   "max_len": 119557
+  },
+  {
+   "shard": "edufineweb_train_000021.npy",
+   "tokens": 100000000,
+   "docs_starting": 95920,
+   "head_tokens": 214,
+   "max_len": 111120
+  },
+  {
+   "shard": "edufineweb_train_000022.npy",
+   "tokens": 100000000,
+   "docs_starting": 96739,
+   "head_tokens": 2832,
+   "max_len": 100095
+  },
+  {
+   "shard": "edufineweb_train_000023.npy",
+   "tokens": 100000000,
+   "docs_starting": 97260,
+   "head_tokens": 485,
+   "max_len": 98748
+  },
+  {
+   "shard": "edufineweb_train_000024.npy",
+   "tokens": 100000000,
+   "docs_starting": 98301,
+   "head_tokens": 5284,
+   "max_len": 159886
+  },
+  {
+   "shard": "edufineweb_train_000025.npy",
+   "tokens": 100000000,
+   "docs_starting": 98684,
+   "head_tokens": 1331,
+   "max_len": 88217
+  },
+  {
+   "shard": "edufineweb_train_000026.npy",
+   "tokens": 100000000,
+   "docs_starting": 97782,
+   "head_tokens": 5413,
+   "max_len": 107084
+  },
+  {
+   "shard": "edufineweb_train_000027.npy",
+   "tokens": 100000000,
+   "docs_starting": 99054,
+   "head_tokens": 827,
+   "max_len": 100958
+  },
+  {
+   "shard": "edufineweb_train_000028.npy",
+   "tokens": 100000000,
+   "docs_starting": 97331,
+   "head_tokens": 606,
+   "max_len": 135583
+  },
+  {
+   "shard": "edufineweb_train_000029.npy",
+   "tokens": 100000000,
+   "docs_starting": 96956,
+   "head_tokens": 650,
+   "max_len": 82000
+  },
+  {
+   "shard": "edufineweb_train_000030.npy",
+   "tokens": 100000000,
+   "docs_starting": 98655,
+   "head_tokens": 65,
+   "max_len": 142644
+  },
+  {
+   "shard": "edufineweb_train_000031.npy",
+   "tokens": 100000000,
+   "docs_starting": 98701,
+   "head_tokens": 16,
+   "max_len": 109188
+  },
+  {
+   "shard": "edufineweb_train_000032.npy",
+   "tokens": 100000000,
+   "docs_starting": 100480,
+   "head_tokens": 33080,
+   "max_len": 118404
+  },
+  {
+   "shard": "edufineweb_train_000033.npy",
+   "tokens": 100000000,
+   "docs_starting": 101187,
+   "head_tokens": 94,
+   "max_len": 121756
+  },
+  {
+   "shard": "edufineweb_train_000034.npy",
+   "tokens": 100000000,
+   "docs_starting": 98363,
+   "head_tokens": 301,
+   "max_len": 124218
+  },
+  {
+   "shard": "edufineweb_train_000035.npy",
+   "tokens": 100000000,
+   "docs_starting": 99143,
+   "head_tokens": 538,
+   "max_len": 104050
+  },
+  {
+   "shard": "edufineweb_train_000036.npy",
+   "tokens": 100000000,
+   "docs_starting": 100029,
+   "head_tokens": 6181,
+   "max_len": 126675
+  },
+  {
+   "shard": "edufineweb_train_000037.npy",
+   "tokens": 100000000,
+   "docs_starting": 99164,
+   "head_tokens": 14,
+   "max_len": 111269
+  },
+  {
+   "shard": "edufineweb_train_000038.npy",
+   "tokens": 100000000,
+   "docs_starting": 100364,
+   "head_tokens": 494,
+   "max_len": 131626
+  },
+  {
+   "shard": "edufineweb_train_000039.npy",
+   "tokens": 100000000,
+   "docs_starting": 98455,
+   "head_tokens": 1509,
+   "max_len": 128468
+  },
+  {
+   "shard": "edufineweb_train_000040.npy",
+   "tokens": 100000000,
+   "docs_starting": 98137,
+   "head_tokens": 314,
+   "max_len": 127062
+  },
+  {
+   "shard": "edufineweb_train_000041.npy",
+   "tokens": 100000000,
+   "docs_starting": 98847,
+   "head_tokens": 790,
+   "max_len": 105699
+  },
+  {
+   "shard": "edufineweb_train_000042.npy",
+   "tokens": 100000000,
+   "docs_starting": 97519,
+   "head_tokens": 17386,
+   "max_len": 143534
+  },
+  {
+   "shard": "edufineweb_train_000043.npy",
+   "tokens": 100000000,
+   "docs_starting": 97468,
+   "head_tokens": 81,
+   "max_len": 163636
+  },
+  {
+   "shard": "edufineweb_train_000044.npy",
+   "tokens": 100000000,
+   "docs_starting": 97782,
+   "head_tokens": 42,
+   "max_len": 121756
+  },
+  {
+   "shard": "edufineweb_train_000045.npy",
+   "tokens": 100000000,
+   "docs_starting": 97864,
+   "head_tokens": 116,
+   "max_len": 111037
+  },
+  {
+   "shard": "edufineweb_train_000046.npy",
+   "tokens": 100000000,
+   "docs_starting": 98313,
+   "head_tokens": 292,
+   "max_len": 115154
+  },
+  {
+   "shard": "edufineweb_train_000047.npy",
+   "tokens": 100000000,
+   "docs_starting": 96669,
+   "head_tokens": 7508,
+   "max_len": 82559
+  },
+  {
+   "shard": "edufineweb_train_000048.npy",
+   "tokens": 100000000,
+   "docs_starting": 96872,
+   "head_tokens": 3409,
+   "max_len": 128458
+  },
+  {
+   "shard": "edufineweb_train_000049.npy",
+   "tokens": 100000000,
+   "docs_starting": 96646,
+   "head_tokens": 3187,
+   "max_len": 129409
+  },
+  {
+   "shard": "edufineweb_train_000050.npy",
+   "tokens": 100000000,
+   "docs_starting": 97796,
+   "head_tokens": 2551,
+   "max_len": 126279
+  },
+  {
+   "shard": "edufineweb_train_000051.npy",
+   "tokens": 100000000,
+   "docs_starting": 96996,
+   "head_tokens": 158,
+   "max_len": 107872
+  },
+  {
+   "shard": "edufineweb_train_000052.npy",
+   "tokens": 100000000,
+   "docs_starting": 97582,
+   "head_tokens": 150,
+   "max_len": 126112
+  },
+  {
+   "shard": "edufineweb_train_000053.npy",
+   "tokens": 100000000,
+   "docs_starting": 98650,
+   "head_tokens": 2194,
+   "max_len": 77722
+  },
+  {
+   "shard": "edufineweb_train_000054.npy",
+   "tokens": 100000000,
+   "docs_starting": 96204,
+   "head_tokens": 15415,
+   "max_len": 112051
+  },
+  {
+   "shard": "edufineweb_train_000055.npy",
+   "tokens": 100000000,
+   "docs_starting": 98069,
+   "head_tokens": 702,
+   "max_len": 103072
+  },
+  {
+   "shard": "edufineweb_train_000056.npy",
+   "tokens": 100000000,
+   "docs_starting": 97997,
+   "head_tokens": 718,
+   "max_len": 112906
+  },
+  {
+   "shard": "edufineweb_train_000057.npy",
+   "tokens": 100000000,
+   "docs_starting": 94909,
+   "head_tokens": 145,
+   "max_len": 113517
+  },
+  {
+   "shard": "edufineweb_train_000058.npy",
+   "tokens": 100000000,
+   "docs_starting": 93938,
+   "head_tokens": 724,
+   "max_len": 123220
+  },
+  {
+   "shard": "edufineweb_train_000059.npy",
+   "tokens": 100000000,
+   "docs_starting": 95018,
+   "head_tokens": 375,
+   "max_len": 74552
+  },
+  {
+   "shard": "edufineweb_train_000060.npy",
+   "tokens": 100000000,
+   "docs_starting": 95376,
+   "head_tokens": 81,
+   "max_len": 132309
+  },
+  {
+   "shard": "edufineweb_train_000061.npy",
+   "tokens": 100000000,
+   "docs_starting": 96554,
+   "head_tokens": 401,
+   "max_len": 87940
+  },
+  {
+   "shard": "edufineweb_train_000062.npy",
+   "tokens": 100000000,
+   "docs_starting": 97084,
+   "head_tokens": 1120,
+   "max_len": 109786
+  },
+  {
+   "shard": "edufineweb_train_000063.npy",
+   "tokens": 100000000,
+   "docs_starting": 96956,
+   "head_tokens": 763,
+   "max_len": 125470
+  },
+  {
+   "shard": "edufineweb_train_000064.npy",
+   "tokens": 100000000,
+   "docs_starting": 97618,
+   "head_tokens": 121,
+   "max_len": 123003
+  },
+  {
+   "shard": "edufineweb_train_000065.npy",
+   "tokens": 100000000,
+   "docs_starting": 95876,
+   "head_tokens": 363,
+   "max_len": 120053
+  },
+  {
+   "shard": "edufineweb_train_000066.npy",
+   "tokens": 100000000,
+   "docs_starting": 96425,
+   "head_tokens": 3639,
+   "max_len": 110115
+  },
+  {
+   "shard": "edufineweb_train_000067.npy",
+   "tokens": 100000000,
+   "docs_starting": 94263,
+   "head_tokens": 421,
+   "max_len": 89011
+  },
+  {
+   "shard": "edufineweb_train_000068.npy",
+   "tokens": 100000000,
+   "docs_starting": 94696,
+   "head_tokens": 26,
+   "max_len": 104280
+  },
+  {
+   "shard": "edufineweb_train_000069.npy",
+   "tokens": 100000000,
+   "docs_starting": 94635,
+   "head_tokens": 938,
+   "max_len": 92437
+  },
+  {
+   "shard": "edufineweb_train_000070.npy",
+   "tokens": 100000000,
+   "docs_starting": 92781,
+   "head_tokens": 495,
+   "max_len": 115171
+  },
+  {
+   "shard": "edufineweb_train_000071.npy",
+   "tokens": 100000000,
+   "docs_starting": 94071,
+   "head_tokens": 4932,
+   "max_len": 139186
+  },
+  {
+   "shard": "edufineweb_train_000072.npy",
+   "tokens": 100000000,
+   "docs_starting": 95294,
+   "head_tokens": 744,
+   "max_len": 168038
+  },
+  {
+   "shard": "edufineweb_train_000073.npy",
+   "tokens": 100000000,
+   "docs_starting": 95371,
+   "head_tokens": 1022,
+   "max_len": 118843
+  },
+  {
+   "shard": "edufineweb_train_000074.npy",
+   "tokens": 100000000,
+   "docs_starting": 95912,
+   "head_tokens": 474,
+   "max_len": 94326
+  },
+  {
+   "shard": "edufineweb_train_000075.npy",
+   "tokens": 100000000,
+   "docs_starting": 96024,
+   "head_tokens": 32,
+   "max_len": 101710
+  },
+  {
+   "shard": "edufineweb_train_000076.npy",
+   "tokens": 100000000,
+   "docs_starting": 97109,
+   "head_tokens": 2385,
+   "max_len": 121308
+  },
+  {
+   "shard": "edufineweb_train_000077.npy",
+   "tokens": 100000000,
+   "docs_starting": 97852,
+   "head_tokens": 624,
+   "max_len": 109830
+  },
+  {
+   "shard": "edufineweb_train_000078.npy",
+   "tokens": 100000000,
+   "docs_starting": 96602,
+   "head_tokens": 132,
+   "max_len": 155135
+  },
+  {
+   "shard": "edufineweb_train_000079.npy",
+   "tokens": 100000000,
+   "docs_starting": 97435,
+   "head_tokens": 47921,
+   "max_len": 111802
+  },
+  {
+   "shard": "edufineweb_train_000080.npy",
+   "tokens": 100000000,
+   "docs_starting": 97705,
+   "head_tokens": 294,
+   "max_len": 101314
+  },
+  {
+   "shard": "edufineweb_train_000081.npy",
+   "tokens": 100000000,
+   "docs_starting": 96782,
+   "head_tokens": 1744,
+   "max_len": 100385
+  },
+  {
+   "shard": "edufineweb_train_000082.npy",
+   "tokens": 100000000,
+   "docs_starting": 97085,
+   "head_tokens": 1295,
+   "max_len": 168038
+  },
+  {
+   "shard": "edufineweb_train_000083.npy",
+   "tokens": 100000000,
+   "docs_starting": 99075,
+   "head_tokens": 41,
+   "max_len": 126447
+  },
+  {
+   "shard": "edufineweb_train_000084.npy",
+   "tokens": 100000000,
+   "docs_starting": 97134,
+   "head_tokens": 9001,
+   "max_len": 124357
+  },
+  {
+   "shard": "edufineweb_train_000085.npy",
+   "tokens": 100000000,
+   "docs_starting": 97372,
+   "head_tokens": 106,
+   "max_len": 135028
+  },
+  {
+   "shard": "edufineweb_train_000086.npy",
+   "tokens": 100000000,
+   "docs_starting": 98639,
+   "head_tokens": 1172,
+   "max_len": 78492
+  },
+  {
+   "shard": "edufineweb_train_000087.npy",
+   "tokens": 100000000,
+   "docs_starting": 98090,
+   "head_tokens": 900,
+   "max_len": 117057
+  },
+  {
+   "shard": "edufineweb_train_000088.npy",
+   "tokens": 100000000,
+   "docs_starting": 97715,
+   "head_tokens": 2843,
+   "max_len": 125336
+  },
+  {
+   "shard": "edufineweb_train_000089.npy",
+   "tokens": 100000000,
+   "docs_starting": 97769,
+   "head_tokens": 729,
+   "max_len": 123830
+  },
+  {
+   "shard": "edufineweb_train_000090.npy",
+   "tokens": 100000000,
+   "docs_starting": 98304,
+   "head_tokens": 103,
+   "max_len": 123444
+  },
+  {
+   "shard": "edufineweb_train_000091.npy",
+   "tokens": 100000000,
+   "docs_starting": 98104,
+   "head_tokens": 1034,
+   "max_len": 77085
+  },
+  {
+   "shard": "edufineweb_train_000092.npy",
+   "tokens": 100000000,
+   "docs_starting": 97076,
+   "head_tokens": 498,
+   "max_len": 130972
+  },
+  {
+   "shard": "edufineweb_train_000093.npy",
+   "tokens": 100000000,
+   "docs_starting": 96889,
+   "head_tokens": 317,
+   "max_len": 131942
+  },
+  {
+   "shard": "edufineweb_train_000094.npy",
+   "tokens": 100000000,
+   "docs_starting": 97536,
+   "head_tokens": 438,
+   "max_len": 110850
+  },
+  {
+   "shard": "edufineweb_train_000095.npy",
+   "tokens": 100000000,
+   "docs_starting": 97385,
+   "head_tokens": 633,
+   "max_len": 113401
+  },
+  {
+   "shard": "edufineweb_train_000096.npy",
+   "tokens": 100000000,
+   "docs_starting": 96664,
+   "head_tokens": 54946,
+   "max_len": 139249
+  },
+  {
+   "shard": "edufineweb_train_000097.npy",
+   "tokens": 100000000,
+   "docs_starting": 97094,
+   "head_tokens": 90,
+   "max_len": 105408
+  },
+  {
+   "shard": "edufineweb_train_000098.npy",
+   "tokens": 100000000,
+   "docs_starting": 96881,
+   "head_tokens": 501,
+   "max_len": 110639
+  },
+  {
+   "shard": "edufineweb_train_000099.npy",
+   "tokens": 53989344,
+   "docs_starting": 51449,
+   "head_tokens": 243,
+   "max_len": 95331
+  },
+  {
+   "shard": "edufineweb_val_000000.npy",
+   "tokens": 100000000,
+   "docs_starting": 95821,
+   "head_tokens": 0,
+   "max_len": 104024
+  }
+ ],
+ "notes": "Percentiles come from an evenly strided sample of about 2,000 documents per shard; counts, mean and histogram use every document. A document cut at a shard boundary is counted in the shard where it starts."
+}

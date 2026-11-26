@@ -1,0 +1,13 @@
+# Versions the test suite and web app were verified with on the Mac (Python 3.12).
+# The cluster training env used torch 2.6.0+cu124 (see cluster/setup_env.sh); the code needs torch >= 2.4.
+torch==2.15.0
+numpy==2.5.5
+tiktoken==0.14.0
+tqdm==4.70.1
+requests==2.34.2
+pyarrow==26.0.1
+transformers==5.24.1
+fastapi==0.165.0
+uvicorn==0.54.0
+pydantic==2.14.4
+pytest==9.2.0
