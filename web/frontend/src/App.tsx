@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Alt, GenParams, ModelInfo, Tok } from "./api";
-import { DEFAULT_PARAMS, fetchModels } from "./api";
+import { DEFAULT_PARAMS, STATIC_SITE, fetchModels } from "./api";
 import { describeStatus, generate, setEngine, useEngine } from "./engine";
 import { Compare } from "./Compare";
 import { allToJSON, conversationToJSON, conversationToMarkdown, download, fileStem, parseImport } from "./exportImport";
@@ -383,19 +383,20 @@ export default function App() {
             <button className="btn ghost" onClick={() => setPanel(false)}>Done</button>
           </div>
           <h3>Engine</h3>
-          <div className="seg" role="radiogroup" aria-label="Where the model runs">
+          {!STATIC_SITE && <div className="seg" role="radiogroup" aria-label="Where the model runs">
             <button role="radio" aria-checked={engine.kind === "server"} className={"seg-btn" + (engine.kind === "server" ? " on" : "")}
                     onClick={() => setEngine("server")}>Server</button>
             <button role="radio" aria-checked={engine.kind === "browser"} className={"seg-btn" + (engine.kind === "browser" ? " on" : "")}
                     onClick={() => setEngine("browser")}>In your browser</button>
-          </div>
+          </div>}
           <p className={"engine-status" + (engine.phase === "error" ? " error" : "")} aria-live="polite">
             {describeStatus(engine)}
             {engine.kind === "browser" && engine.phase === "download" && !!engine.total && (
               <progress max={engine.total} value={engine.loaded ?? 0} />
             )}
           </p>
-          {engine.kind === "browser" && <p className="muted small">Only the AmirGPT models run in the browser. OpenAI GPT-2 needs the Server engine.</p>}
+          {engine.kind === "browser" && !STATIC_SITE && <p className="muted small">Only the AmirGPT models run in the browser. OpenAI GPT-2 needs the Server engine.</p>}
+          {STATIC_SITE && <p className="muted small">This page has no server: AmirGPT runs entirely in your browser. Chrome or Edge on a computer with a GPU works best.</p>}
           <h3>Display</h3>
           <label className="toggle field-toggle" title="Render headings, lists, bold, italic and code. Every character still belongs to its token.">
             <input type="checkbox" checked={markdown} onChange={(e) => setMarkdown(e.target.checked)} />

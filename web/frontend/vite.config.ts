@@ -4,6 +4,8 @@ import react from "@vitejs/plugin-react";
 // dev: `npm run dev` proxies /api (generation) and /models (ONNX files for the in-browser
 // engine, src/webgpu) to the FastAPI server on :8000
 export default defineConfig({
+  // GitHub Pages serves the static build under /<repo>/ (set by .github/workflows/pages.yml)
+  base: process.env.VITE_BASE ?? "/",
   plugins: [react()],
   server: {
     proxy: {

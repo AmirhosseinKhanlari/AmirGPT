@@ -2,7 +2,7 @@
 // (onnxruntime-web, WebGPU with a wasm fallback; see src/webgpu/). Both produce the same events.
 import { useEffect, useState } from "react";
 import type { DoneEvent, GenerateRequest, Tok } from "./api";
-import { streamGenerate } from "./api";
+import { STATIC_SITE, streamGenerate } from "./api";
 import { readPref, writePref } from "./prefs";
 
 export type EngineKind = "server" | "browser";
@@ -24,7 +24,7 @@ export type EngineStatus = {
   error?: string;
 };
 
-let status: EngineStatus = { kind: readPref<EngineKind>("amirgpt.engine", "server") };
+let status: EngineStatus = { kind: STATIC_SITE ? "browser" : readPref<EngineKind>("amirgpt.engine", "server") };
 const listeners = new Set<(s: EngineStatus) => void>();
 function set(s: Partial<EngineStatus>) {
   status = { ...status, ...s };
@@ -32,6 +32,7 @@ function set(s: Partial<EngineStatus>) {
 }
 
 export function setEngine(kind: EngineKind) {
+  if (STATIC_SITE) return; // the static site has no server engine
   writePref("amirgpt.engine", kind);
   set({ kind, phase: undefined, error: undefined });
 }
@@ -53,9 +54,12 @@ export async function generate(req: GenerateRequest, onToken: (t: Tok) => void, 
     throw new Error(`${req.model} can only run on the server. Switch the engine to "Server" in Settings, or pick an AmirGPT model.`);
   }
   const wg = await import("./webgpu");
+  // the static site ships only the fp16 exports (GitHub Pages size limit), served next to the page
+  if (STATIC_SITE) wg.setModelBaseUrl(`${import.meta.env.BASE_URL}models`);
   try {
     const info = await wg.loadModel(req.model, (p) =>
-      set({ phase: p.phase, model: req.model, loaded: p.loaded, total: p.total, fromCache: p.fromCache, backend: p.backend, error: undefined }));
+      set({ phase: p.phase, model: req.model, loaded: p.loaded, total: p.total, fromCache: p.fromCache, backend: p.backend, error: undefined }),
+      STATIC_SITE ? { dtype: "fp16" } : undefined);
     set({ phase: "ready", model: req.model, backend: info.backend, dtype: info.dtype, fallbackReason: info.fallbackReason });
   } catch (e) {
     set({ phase: "error", model: req.model, error: String((e as Error)?.message ?? e) });

@@ -102,28 +102,32 @@ async function fetchModelBytes(url: string, meta: ModelMeta, report: (p: Omit<Lo
     }
   }
 
-  const r = await fetch(url);
-  if (!r.ok || !r.body) throw new Error(`model download failed: HTTP ${r.status} for ${url}`);
+  // the model is one file, or (static hosting) several parts that are joined in order
+  const urls = meta.parts?.length ? meta.parts.map((p) => url.replace(/[^/]*$/, p)) : [url];
   const total = meta.bytes;
   let buf = new Uint8Array(total);
   let loaded = 0;
   let lastReport = 0;
-  const reader = r.body.getReader();
   report({ phase: "download", loaded: 0, total, fromCache: false });
-  for (;;) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    if (loaded + value.byteLength > buf.byteLength) {
-      const grown = new Uint8Array(Math.max(buf.byteLength * 2, loaded + value.byteLength));
-      grown.set(buf.subarray(0, loaded));
-      buf = grown;
-    }
-    buf.set(value, loaded);
-    loaded += value.byteLength;
-    const now = Date.now();
-    if (now - lastReport >= 100) {
-      lastReport = now;
-      report({ phase: "download", loaded, total, fromCache: false });
+  for (const partUrl of urls) {
+    const r = await fetch(partUrl);
+    if (!r.ok || !r.body) throw new Error(`model download failed: HTTP ${r.status} for ${partUrl}`);
+    const reader = r.body.getReader();
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      if (loaded + value.byteLength > buf.byteLength) {
+        const grown = new Uint8Array(Math.max(buf.byteLength * 2, loaded + value.byteLength));
+        grown.set(buf.subarray(0, loaded));
+        buf = grown;
+      }
+      buf.set(value, loaded);
+      loaded += value.byteLength;
+      const now = Date.now();
+      if (now - lastReport >= 100) {
+        lastReport = now;
+        report({ phase: "download", loaded, total, fromCache: false });
+      }
     }
   }
   report({ phase: "download", loaded, total, fromCache: false });
@@ -151,10 +155,11 @@ async function createSession(bytes: Uint8Array, device: Backend): Promise<ort.In
     return ort.InferenceSession.create(bytes, {
       executionProviders: ["webgpu"],
       graphOptimizationLevel: "all",
+      logSeverityLevel: 3, // errors only: skip the informational "nodes assigned to CPU" warning
       preferredOutputLocation: { present_kv: "gpu-buffer", logits: "cpu" },
     });
   }
-  return ort.InferenceSession.create(bytes, { executionProviders: ["wasm"], graphOptimizationLevel: "all" });
+  return ort.InferenceSession.create(bytes, { executionProviders: ["wasm"], graphOptimizationLevel: "all", logSeverityLevel: 3 });
 }
 
 async function loadEngine(name: string, opts: LoadOptions, entry: Entry): Promise<Engine> {

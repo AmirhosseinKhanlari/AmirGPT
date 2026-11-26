@@ -2,6 +2,11 @@
 
 > Course project for **Big Data** (Fall 2026).
 
+**Live demo: https://amirhosseinkhanlari.github.io/AmirGPT/** runs AmirGPT Chat and Base entirely in
+your browser (WebGPU; Chrome or Edge on a computer with a GPU works best). The first message downloads
+the model, about 250 MB, which the browser then caches. The demo has no server, so the OpenAI GPT-2
+and DPO comparison models are only in the local app (`./run.sh`).
+
 GPT-2 (124M) **reproduced from scratch**, following Andrej Karpathy's
 ["Let's reproduce GPT-2 (124M)"](https://www.youtube.com/watch?v=l8pRSuU81PU)
 ([build-nanogpt](https://github.com/karpathy/build-nanogpt)). It is pretrained on 10B tokens of
@@ -133,7 +138,8 @@ All of the video's hyperparameters are the defaults. See `python -m gpt2.train_g
 (cd web/frontend && bash scripts/parity.sh fp32 fp16)   # in-browser engine vs server (needs the ONNX export)
 ```
 
-GitHub Actions runs the Python tests and the frontend build on every push.
+GitHub Actions runs the Python tests and the frontend build on every push, and redeploys the live demo
+(`.github/workflows/pages.yml`, `web/build_static_site.py`).
 
 ## Repository layout notes
 

@@ -8,6 +8,8 @@ export type ModelMeta = {
   dtype: "fp32" | "fp16";
   kv_dtype: "float32" | "float16";
   file: string;
+  /** optional: the file split into parts (static hosting with a per-file size limit); joined in order */
+  parts?: string[];
   bytes: number;
   sha256: string;
   opset: number;

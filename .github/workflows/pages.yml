@@ -1,0 +1,62 @@
+name: Deploy to GitHub Pages
+
+# Static, server-free AmirGPT: the frontend built with VITE_STATIC=1 runs the fp16 ONNX models in the
+# visitor's browser (WebGPU, WebAssembly fallback). The models come from the v1.0 release, so the
+# ~500 MB of weights never enter git history; web/build_static_site.py splits them below 100 MB per file.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/frontend/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build the static frontend
+        working-directory: web/frontend
+        env:
+          VITE_STATIC: "1"
+          VITE_BASE: /${{ github.event.repository.name }}/
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+      - name: Download the in-browser models (release v1.0)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download v1.0 --dir onnx --pattern 'amirgpt-*-fp16.*'
+      - name: Add models and training metrics to the site
+        run: python -m web.build_static_site --dist web/frontend/dist --onnx onnx
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/frontend/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

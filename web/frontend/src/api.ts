@@ -58,14 +58,25 @@ export class HttpError extends Error {
   }
 }
 
+/** Static build (GitHub Pages): no Python server; models run in the browser, metrics come from a JSON file. */
+export const STATIC_SITE = import.meta.env.VITE_STATIC === "1";
+
+const STATIC_MODELS: ModelInfo[] = [
+  { id: "amirgpt-chat", name: "AmirGPT Chat", mode: "chat", available: true, loaded: false,
+    description: "Our GPT-2 124M, pretrained from scratch on 10B FineWeb-Edu tokens, then chat fine-tuned (SFT)." },
+  { id: "amirgpt-base", name: "AmirGPT Base", mode: "complete", available: true, loaded: false,
+    description: "Our from-scratch pretrained GPT-2 124M before chat tuning. It continues text, it does not chat." },
+];
+
 export async function fetchModels(): Promise<ModelInfo[]> {
+  if (STATIC_SITE) return STATIC_MODELS;
   const r = await fetch("/api/models");
   if (!r.ok) throw new Error(`models: HTTP ${r.status}`);
   return r.json();
 }
 
 export async function fetchMetrics(): Promise<Metrics> {
-  const r = await fetch("/api/metrics");
+  const r = await fetch(STATIC_SITE ? `${import.meta.env.BASE_URL}metrics.json` : "/api/metrics");
   if (!r.ok) throw new Error(`metrics: HTTP ${r.status}`);
   return r.json();
 }
