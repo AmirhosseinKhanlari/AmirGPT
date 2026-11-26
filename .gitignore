@@ -17,7 +17,7 @@ edu_fineweb10B/
 sft_data/
 hellaswag/
 log*/
-logs_from_cluster/
+!logs_from_cluster/
 *.npy
 
 # Video transcript (copyrighted; not redistributed)

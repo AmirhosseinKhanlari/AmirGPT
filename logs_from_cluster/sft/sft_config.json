@@ -1,0 +1,19 @@
+{
+  "init": "log_124M_10B/model_19072.pt",
+  "data": "sft_data",
+  "out": "log_sft",
+  "epochs": 2.0,
+  "micro_batch": 16,
+  "grad_accum": 1,
+  "max_lr": 0.0001,
+  "min_lr_ratio": 0.1,
+  "warmup_steps": 100,
+  "weight_decay": 0.1,
+  "grad_clip": 1.0,
+  "eval_interval": 250,
+  "eval_batches": 50,
+  "dtype": "auto",
+  "seed": 1337,
+  "device": null,
+  "max_steps": -1
+}
